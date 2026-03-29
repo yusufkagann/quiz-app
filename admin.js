@@ -1,16 +1,35 @@
 let gameState = null;
 const gameRef = db.ref('active_game');
+let gameLoopTimer = null;
 
 gameRef.on('value', (snapshot) => {
     gameState = snapshot.val() || {};
     renderPlayers();
-    document.getElementById('admin-status').innerText = gameState.status === 'lobby' ? "Lobi Açık (Öğrenciler giriyor)" :
-        gameState.status === 'question' ? `Soru ${gameState.currentQuestionIndex + 1} Sürülüyor` :
-            gameState.status === 'result' ? `Soru ${gameState.currentQuestionIndex + 1} Sonucu Gösterimde` : "Veritabanı Boş/Açılmadı";
+
+    let statusText = "Veritabanı Boş/Açılmadı";
+    if (gameState.status === 'lobby') statusText = "Lobi Açık (Öğrenciler giriyor)";
+    else if (gameState.status === 'question') statusText = `Soru ${gameState.currentQuestionIndex + 1} Sürülüyor`;
+    else if (gameState.status === 'result') {
+        if (gameState.currentQuestionIndex >= questions.length - 1) statusText = "Oyun Bitti (Sıralama Gösteriliyor)";
+        else statusText = `Soru ${gameState.currentQuestionIndex + 1} Sonucu Gösteriliyor`;
+    }
+    document.getElementById('admin-status').innerText = statusText;
+
+    // OTOMASYON: Eğer oyundayasak ve herkes cevap verdiyse süreyi beklemeden geç
+    if (gameState.status === 'question' && gameState.players) {
+        const playersArr = Object.values(gameState.players);
+        const answeredCount = playersArr.filter(p => p.currentAnswer !== null && p.currentAnswer !== undefined).length;
+        if (playersArr.length > 0 && answeredCount === playersArr.length) {
+            console.log("Herkes cevap verdi, süre beklenmeden geçiliyor...");
+            clearTimeout(gameLoopTimer);
+            transitionToResult(gameState.currentQuestionIndex);
+        }
+    }
 });
 
 document.getElementById('btn-start-lobby').addEventListener('click', () => {
     if (confirm("Tüm veri silinip Lobi yeniden açılacak, emin misiniz?")) {
+        clearTimeout(gameLoopTimer);
         gameRef.set({
             status: 'lobby',
             currentQuestionIndex: -1,
@@ -19,67 +38,65 @@ document.getElementById('btn-start-lobby').addEventListener('click', () => {
     }
 });
 
-const controlsDiv = document.getElementById('question-controls');
-questions.forEach((q, i) => {
-    const box = document.createElement('div');
-    box.style.border = '1px solid #ccc';
-    box.style.padding = '10px';
-    box.style.marginBottom = '20px';
-    box.style.borderRadius = '8px';
-
-    const title = document.createElement('h4');
-    title.innerText = `Soru ${i + 1}`;
-    title.style.marginBottom = '10px';
-
-    const btnStart = document.createElement('button');
-    btnStart.className = 'btn btn-primary btn-block';
-    btnStart.innerText = `Soru ${i + 1}'e Geç (Yansıt)`;
-    btnStart.style.marginBottom = '10px';
-    btnStart.style.fontSize = '1rem';
-    btnStart.style.padding = '0.5rem';
-    btnStart.onclick = () => {
-        const updates = {
-            status: 'question',
-            currentQuestionIndex: i,
-            correctIndex: -1
-        };
-        if (gameState.players) {
-            Object.keys(gameState.players).forEach(pid => {
-                updates[`players/${pid}/currentAnswer`] = null;
-            });
-        }
-        gameRef.update(updates);
-    };
-
-    const btnEnd = document.createElement('button');
-    btnEnd.className = 'btn btn-secondary btn-block';
-    btnEnd.style.backgroundColor = 'var(--purple)';
-    btnEnd.style.color = 'white';
-    btnEnd.style.border = 'none';
-    btnEnd.innerText = `Soru ${i + 1} Sonucunu Göster`;
-    btnEnd.style.fontSize = '1rem';
-    btnEnd.style.padding = '0.5rem';
-    btnEnd.onclick = () => {
-        const updates = {
-            status: 'result',
-            correctIndex: questions[i].correctIndex
-        };
-        if (gameState.players) {
-            Object.keys(gameState.players).forEach(pid => {
-                const p = gameState.players[pid];
-                if (p.currentAnswer === questions[i].correctIndex) {
-                    updates[`players/${pid}/score`] = (p.score || 0) + 1000;
-                }
-            });
-        }
-        gameRef.update(updates);
-    };
-
-    box.appendChild(title);
-    box.appendChild(btnStart);
-    box.appendChild(btnEnd);
-    controlsDiv.appendChild(box);
+document.getElementById('btn-start-game').addEventListener('click', () => {
+    if (!gameState || !gameState.players || Object.keys(gameState.players).length === 0) {
+        if (!confirm("Lobide hiç oynayan öğrenci gömülü değil! Yine de tek başınıza/otomatik başlatılsın mı?")) return;
+    }
+    transitionToQuestion(0);
 });
+
+const transitionToQuestion = (index) => {
+    if (index >= questions.length) {
+        gameRef.update({ status: 'result', currentQuestionIndex: questions.length });
+        return;
+    }
+
+    const updates = {
+        status: 'question',
+        currentQuestionIndex: index,
+        correctIndex: -1,
+        questionStartTime: Date.now()
+    };
+
+    if (gameState && gameState.players) {
+        Object.keys(gameState.players).forEach(pid => {
+            updates[`players/${pid}/currentAnswer`] = null;
+        });
+    }
+    gameRef.update(updates);
+
+    // 15 Saniye (15000 ms) sonra sonucu otomatik göster
+    clearTimeout(gameLoopTimer);
+    gameLoopTimer = setTimeout(() => {
+        transitionToResult(index);
+    }, 15500);
+};
+
+const transitionToResult = (index) => {
+    const correctIdx = questions[index].correctIndex;
+    const updates = {
+        status: 'result',
+        correctIndex: correctIdx
+    };
+
+    if (gameState && gameState.players) {
+        Object.keys(gameState.players).forEach(pid => {
+            const p = gameState.players[pid];
+            if (p.currentAnswer === correctIdx) {
+                updates[`players/${pid}/score`] = (p.score || 0) + 1000;
+            }
+        });
+    }
+    gameRef.update(updates);
+
+    if (index < questions.length - 1) {
+        // 8 saniye sonra otomatik diğer soruya geç
+        clearTimeout(gameLoopTimer);
+        gameLoopTimer = setTimeout(() => {
+            transitionToQuestion(index + 1);
+        }, 8000);
+    }
+};
 
 const renderPlayers = () => {
     const list = document.getElementById('admin-players-list');
@@ -102,7 +119,7 @@ const renderPlayers = () => {
             ansStatus = (p.currentAnswer !== null && p.currentAnswer !== undefined) ? " ✅(Cevapladı)" : " ⏳(Bekleniyor)";
         }
 
-        div.innerText = `${p.name} - ${p.score} Puan ${ansStatus}`;
+        div.innerText = `${p.name} - ${p.score || 0} Puan ${ansStatus}`;
         list.appendChild(div);
     });
 };

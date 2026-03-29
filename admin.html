@@ -15,8 +15,16 @@
         <div class="card" style="width: 350px; margin: 20px;">
             <h2 style="color:var(--dark); margin-bottom: 20px;">🕹️ Kontroller</h2>
             <button id="btn-start-lobby" class="btn btn-secondary btn-block"
-                style="background-color: var(--red); color: white; border: none;">Oyunu Sıfırla & Lobiye Aç</button>
-            <div id="question-controls" style="margin-top: 30px; border-top: 2px solid #eee; padding-top: 20px;"></div>
+                style="background-color: var(--red); color: white; border: none; margin-bottom:15px;">Oyunu Sıfırla &
+                Lobiye Aç</button>
+            <div style="border-top: 2px solid #eee; padding-top: 20px;">
+                <button id="btn-start-game" class="btn btn-primary btn-block"
+                    style="font-size: 1.2rem; padding: 15px;">🚀 Sınavı Başlat (Otomatik Akış)</button>
+                <p style="margin-top:15px; font-size:0.9rem; color:#666;">Sınav başlatıldığında sorular adım adım
+                    otomatik olarak ilerleyecektir. Her bir sorunun normal süresi 15 saniyedir ancak herkes cevap
+                    verdiğinde süre beklenmeden direkt sonuç ekranına geçilir.</p>
+            </div>
+            <div id="question-controls" style="display:none;"></div>
         </div>
         <div class="card" style="flex:1; min-width: 300px; margin: 20px; color: var(--dark);">
             <h2>Durum: <span id="admin-status" style="color: var(--blue);">Bağlanıyor...</span></h2>

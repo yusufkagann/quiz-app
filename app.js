@@ -1,4 +1,4 @@
-let myPlayerId = localStorage.getItem('myPlayerId');
+let myPlayerId = sessionStorage.getItem('myPlayerId');
 let myNickname = '';
 let gameState = null;
 let currentQuestionIndex = -1;
@@ -16,7 +16,7 @@ document.getElementById('btn-join-lobby').addEventListener('click', () => {
         myNickname = nickname;
         if (!myPlayerId) {
             myPlayerId = 'player_' + Math.random().toString(36).substr(2, 9);
-            localStorage.setItem('myPlayerId', myPlayerId);
+            sessionStorage.setItem('myPlayerId', myPlayerId);
         }
 
         const playerRef = db.ref(`active_game/players/${myPlayerId}`);
