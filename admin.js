@@ -1,11 +1,7 @@
-import { db } from './firebase-config.js';
-import { questions } from './questions.js';
-import { ref, set, update, onValue } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-database.js";
-
 let gameState = null;
+const gameRef = db.ref('active_game');
 
-const gameRef = ref(db, 'active_game');
-onValue(gameRef, (snapshot) => {
+gameRef.on('value', (snapshot) => {
     gameState = snapshot.val() || {};
     renderPlayers();
     document.getElementById('admin-status').innerText = gameState.status === 'lobby' ? "Lobi Açık (Öğrenciler giriyor)" :
@@ -15,7 +11,7 @@ onValue(gameRef, (snapshot) => {
 
 document.getElementById('btn-start-lobby').addEventListener('click', () => {
     if (confirm("Tüm veri silinip Lobi yeniden açılacak, emin misiniz?")) {
-        set(gameRef, {
+        gameRef.set({
             status: 'lobby',
             currentQuestionIndex: -1,
             players: {}
@@ -52,7 +48,7 @@ questions.forEach((q, i) => {
                 updates[`players/${pid}/currentAnswer`] = null;
             });
         }
-        update(gameRef, updates);
+        gameRef.update(updates);
     };
 
     const btnEnd = document.createElement('button');
@@ -76,7 +72,7 @@ questions.forEach((q, i) => {
                 }
             });
         }
-        update(gameRef, updates);
+        gameRef.update(updates);
     };
 
     box.appendChild(title);

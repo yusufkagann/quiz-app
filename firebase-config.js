@@ -1,16 +1,17 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
-import { getDatabase } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-database.js";
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
 
-// LÜTFEN FIREBASE KONSOLUNUZDAN ALDIĞINIZ GÜNCEL BİLGİLERİ BURAYA YAPIŞTIRIN:
+// Your web app's Firebase configuration
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-    databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_PROJECT_ID.appspot.com",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID"
+    apiKey: "AIzaSyCgEVPqtQqDTzao1a2LgAL4yW6jk26JjNA",
+    authDomain: "quizapp-2327e.firebaseapp.com",
+    projectId: "quizapp-2327e",
+    storageBucket: "quizapp-2327e.firebasestorage.app",
+    messagingSenderId: "573771860460",
+    appId: "1:573771860460:web:8289ea3fddebf097ce98c9", // BURAYA VİRGÜL EKLEDİM
+    databaseURL: "https://quizapp-2327e-default-rtdb.firebaseio.com"
 };
 
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
-export const db = getDatabase(app);
+export { app }; // Eğer diğer dosyalar bu config'i kullanıyorsa bu satır önemli

@@ -1,13 +1,9 @@
-import { db } from './firebase-config.js';
-import { questions } from './questions.js';
-import { ref, set, update, onValue, onDisconnect } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-database.js";
-
 let myPlayerId = localStorage.getItem('myPlayerId');
 let myNickname = '';
 let gameState = null;
 let currentQuestionIndex = -1;
 
-const gameRef = ref(db, 'active_game');
+const gameRef = db.ref('active_game');
 
 const switchView = (viewId) => {
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
@@ -23,9 +19,9 @@ document.getElementById('btn-join-lobby').addEventListener('click', () => {
             localStorage.setItem('myPlayerId', myPlayerId);
         }
 
-        const playerRef = ref(db, `active_game/players/${myPlayerId}`);
-        set(playerRef, { name: myNickname, score: 0, currentAnswer: null });
-        onDisconnect(playerRef).remove();
+        const playerRef = db.ref(`active_game/players/${myPlayerId}`);
+        playerRef.set({ name: myNickname, score: 0, currentAnswer: null });
+        playerRef.onDisconnect().remove();
 
         listenToGame();
     } else {
@@ -34,7 +30,7 @@ document.getElementById('btn-join-lobby').addEventListener('click', () => {
 });
 
 const listenToGame = () => {
-    onValue(gameRef, (snapshot) => {
+    gameRef.on('value', (snapshot) => {
         gameState = snapshot.val();
         if (!gameState) return;
 
@@ -100,9 +96,9 @@ document.querySelectorAll('.answer-btn').forEach(btn => {
         if (gameState.status !== 'question') return;
 
         const index = parseInt(e.currentTarget.getAttribute('data-index'));
-        update(ref(db, `active_game/players/${myPlayerId}`), {
+        db.ref(`active_game/players/${myPlayerId}`).update({
             currentAnswer: index,
-            timestamp: Date.now() // İstenen basma süresi eklendi
+            timestamp: Date.now()
         });
 
         switchView('view-wait');
@@ -189,7 +185,6 @@ const showResult = () => {
 
     renderChart(correctIndex);
 
-    // Eğer son sorudaysak sıralamayı da göster
     if (gameState.currentQuestionIndex >= questions.length - 1) {
         document.getElementById('leaderboard-section').style.display = 'block';
         document.getElementById('result-title').innerText = "Oyun Bitti! Bütün sorular tamamlandı!";

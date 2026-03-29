@@ -1,4 +1,4 @@
-export const questions = [
+const questions = [
     {
         question: "1. İnsanların bir araya gelerek toplumu oluşturmasındaki temel itici güç aşağıdakilerden hangisidir?",
         answers: ["Sadece ekonomik zenginliği artırmak", "Güvenlik, sosyalleşme, yardımlaşma gibi temel ihtiyaçları karşılamak", "Diğer toplumlarla rekabet etmek", "Siyasi sınırları genişletmek"],

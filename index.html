@@ -21,7 +21,8 @@
                     Katıl</button>
             </div>
             <p style="color:white; font-weight:bold;"><a href="admin.html"
-                    style="color:yellow; text-decoration:none;">Öğretmen / Yönetici Paneli</a></p>
+                    onclick="if(prompt('Yönetici şifreniz nedir?') !== 'furkan123') { alert('Yanlış şifre!'); return false; }"
+                    style="color:yellow; text-decoration:none;">Yönetici Paneli</a></p>
         </div>
 
         <!-- Unified Lobby View -->
@@ -92,7 +93,11 @@
                 geçmesini bekleyin...</p>
         </div>
     </div>
-    <script type="module" src="app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-database-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="questions.js"></script>
+    <script src="app.js"></script>
 </body>
 
 </html>
