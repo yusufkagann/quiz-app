@@ -195,17 +195,58 @@ const showResult = () => {
     }
 };
 
+const createPodiumStep = (player, rank, stepClass) => {
+    const placeDiv = document.createElement('div');
+    placeDiv.className = 'podium-place';
+
+    const nameDiv = document.createElement('div');
+    nameDiv.className = 'podium-name';
+    nameDiv.innerText = player.name;
+
+    const scoreDiv = document.createElement('div');
+    scoreDiv.className = 'podium-score';
+    scoreDiv.innerText = `${player.score || 0} P`;
+
+    const stepDiv = document.createElement('div');
+    stepDiv.className = `podium-step ${stepClass}`;
+    stepDiv.innerText = rank;
+
+    placeDiv.appendChild(nameDiv);
+    placeDiv.appendChild(scoreDiv);
+    placeDiv.appendChild(stepDiv);
+    return placeDiv;
+};
+
 const renderLeaderboard = () => {
     const list = document.getElementById('leaderboard-list');
     list.innerHTML = '';
     if (!gameState.players) return;
 
     const sortedPlayers = Object.values(gameState.players).sort((a, b) => (b.score || 0) - (a.score || 0));
-    sortedPlayers.forEach((p, idx) => {
+
+    // Kürsü (Podium) Eklemesi
+    const podiumContainer = document.createElement('div');
+    podiumContainer.className = 'podium-container';
+
+    const p1 = sortedPlayers[0];
+    const p2 = sortedPlayers[1];
+    const p3 = sortedPlayers[2];
+
+    // Soldan sağa dizilim: 3, 1, 2
+    if (p3) podiumContainer.appendChild(createPodiumStep(p3, 3, 'step-3'));
+    if (p1) podiumContainer.appendChild(createPodiumStep(p1, 1, 'step-1'));
+    if (p2) podiumContainer.appendChild(createPodiumStep(p2, 2, 'step-2'));
+
+    if (sortedPlayers.length > 0) {
+        list.appendChild(podiumContainer);
+    }
+
+    // 4. ve 5. Sıralamalar vs
+    for (let idx = 3; idx < sortedPlayers.length; idx++) {
+        const p = sortedPlayers[idx];
         const item = document.createElement('div');
         item.className = 'leaderboard-item';
-        if (idx === 0) item.style.backgroundColor = 'var(--yellow)';
         item.innerHTML = `<span>${idx + 1}. ${p.name}</span> <span>${p.score || 0} 🏆</span>`;
         list.appendChild(item);
-    });
+    }
 };
